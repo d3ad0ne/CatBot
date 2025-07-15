@@ -1,6 +1,6 @@
 # CatBot
 
-[![Last Commit](https://img.shields.io/gitea/last-commit/:user/:repo)]
+[![Last Commit](https://img.shields.io/gitea/last-commit/:n0one/:CatBot)]
 
 This is a simple (yet-to-be-made) telegram bot that sends photos of cats to a user, with an option to subscribe for daily cat photos.
 
