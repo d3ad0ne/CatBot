@@ -1,13 +1,14 @@
 from minio import Minio
 from random import randint
-import dbwork
+import DBwork
+import config
 
 def _setClient():
     minio_client = Minio(
-        "localhost:9000",
-        access_key="minioadmin",
-        secret_key="minioadmin",
-        secure=False
+        config.IS_address,
+        access_key = config.acc_key,
+        secret_key = config.sec_key,
+        secure = False
     )
     return minio_client
 
@@ -23,12 +24,12 @@ def downloadImage(currentDay, username):
     client.fget_object(bucket_name, getImageName(currentDay), username + '.jpeg')
 
 def downloadForAll(currentDay):
+    cur, conn = DBwork.set_connection()
     counter = 1
-    user = dbwork.get_user(counter)
+    user = DBwork.get_user(counter, cur)
     while(user != 'Error'):
         downloadImage(currentDay, user)
         counter += 1
-        user = dbwork.get_user(counter)
+        user = DBwork.get_user(counter, cur)
+    DBwork.close_connection(conn, cur)
 
-Day = 'Tuesday'
-downloadForAll(Day)
