@@ -1,7 +1,8 @@
 from minio import Minio
 from random import randint
 import DBwork
-import config
+from src import config
+
 
 def _setClient():
     minio_client = Minio(
