@@ -1,7 +1,7 @@
 import psycopg2
 import config
 
-def _get_last_id(cursor):
+def get_last_id(cursor):
     cursor.execute("SELECT MAX(id) FROM usernames")
     id = cursor.fetchall()[0][0]
     return id
@@ -23,25 +23,18 @@ def close_connection(connection, cursor):
 
 #Functions don't close connection automatically, it has to be closed manually
 def add_user(username, connection, cursor):
-    cursor = connection.cursor()
-    cursor.execute("INSERT INTO usernames VALUES (%s, %s);", (_get_last_id(cursor) + 1, username))
+    cursor.execute("INSERT INTO usernames VALUES (%s, %s);", (get_last_id(cursor) + 1, username))
     connection.commit()
     
 def delete_user(username, connection, cursor):
-    cursor = connection.cursor()
     cursor.execute("DELETE FROM usernames WHERE username = %s;", (username,))
     connection.commit()
 
 def change_name(old_username, new_username, connection, cursor):
-    cursor = connection.cursor()
     cursor.execute("UPDATE usernames SET username = %s WHERE username = %s;", (new_username, old_username))
     connection.commit()
 
 def get_user(id, cursor):
-    max_id = _get_last_id(cursor)
-    if id <= max_id:
-        cursor.execute("SELECT username FROM usernames WHERE id = %s", (id,))
-        username = cursor.fetchall()[0][0]
-    else:
-        username = 'Error'
-    return username, cursor
+    cursor.execute("SELECT username FROM usernames WHERE id = %s", (id,))
+    username = cursor.fetchall()[0][0]
+    return username
