@@ -1,5 +1,6 @@
 import psycopg2
-import config
+from src import config
+
 
 def get_last_id(cursor):
     cursor.execute("SELECT MAX(id) FROM usernames")
