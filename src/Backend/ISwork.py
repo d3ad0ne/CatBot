@@ -13,19 +13,28 @@ def _setClient():
     )
     return minio_client
 
-def getNumberofObjects(client, currentDay, bucket_name):
-    objects = client.list_objects(bucket_name, prefix=currentDay+'/')
+def getNumberofObjects(client, currentDay):
+    objects = client.list_objects(config.bucket_name, prefix=currentDay+'/')
     return sum(1 for _ in objects)
 
-def getImageName(currentDay, client):
-    maxFiles = getNumberofObjects(client, currentDay, config.bucket_name)
+def getObjectExtension(client, currentDay, fileNumber):
+    objects = client.list_objects(config.bucket_name, prefix=currentDay+'/')
+    for counter, obj in enumerate(objects, start=1):
+        if counter == fileNumber:
+            return obj.object_name.split('.')[-1]
+
+def getFileNames(currentDay, client, username):
+    maxFiles = getNumberofObjects(client, currentDay)
     fileNumber = randint(1, maxFiles)
-    desiredFile = currentDay + '/' + str(fileNumber) + '.jpeg'
-    return desiredFile
+    fileExtension = getObjectExtension(client, currentDay, fileNumber)
+    desiredFile = currentDay + '/' + str(fileNumber) + '.' + fileExtension
+    downloadName = username + '.' + fileExtension
+    return desiredFile, downloadName
 
 def downloadImage(currentDay, username):
     client = _setClient()
-    client.fget_object(config.bucket_name, getImageName(currentDay, client), username + '.jpeg')
+    object_name, file_name = getFileNames(currentDay, client, username)
+    client.fget_object(config.bucket_name, object_name, file_name)
 
 def downloadForAll(currentDay):
     cur, conn = DBwork.set_connection()
