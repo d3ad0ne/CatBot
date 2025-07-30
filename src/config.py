@@ -9,7 +9,7 @@ postgres_user = config('postgres_user')
 postgres_password = config('postgres_password')
 host_name = config('host_name')
 port = config('port')
-bucket_name = 'cat-images'
+bucket_name = config('bucket_name')
 
 
 TG_TOKEN = config('TG_TOKEN')
