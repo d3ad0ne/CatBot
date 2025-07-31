@@ -1,15 +1,15 @@
 from decouple import config
 
 
-IS_address = config('IS_address')
-acc_key = config('acc_key')
-sec_key = config('sec_key')
-db_name = config('db_name')
-postgres_user = config('postgres_user')
-postgres_password = config('postgres_password')
-host_name = config('host_name')
-port = config('port')
-bucket_name = config('bucket_name')
+IS_address = config('IS_ADDRESS')
+acc_key = config('ACC_KEY')
+sec_key = config('SEC_KEY')
+db_name = config('DB_NAME')
+postgres_user = config('POSTGRES_USER')
+postgres_password = config('POSTGRES_PASSWORD')
+host_name = config('HOST_NAME')
+port = config('PORT')
+bucket_name = config('BUCKET_NAME')
 
 
 TG_TOKEN = config('TG_TOKEN')
