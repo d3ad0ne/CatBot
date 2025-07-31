@@ -46,5 +46,6 @@ def downloadForAll(currentDay):
     for id in range(1, max_id + 1):
         chat_id = DBwork.get_chat_id(id, cur)
         image_URL = getDownloadURL(currentDay)
+        # await bot.send_photo(chat_id = chat_id, photo = image_URL
     DBwork.close_connection(conn, cur)
 
