@@ -1,6 +1,7 @@
 from minio import Minio
 from random import randint
-import DBwork
+from datetime import timedelta
+from src.Backend import DBwork
 from src import config
 
 
@@ -23,24 +24,27 @@ def getObjectExtension(client, currentDay, fileNumber):
         if counter == fileNumber:
             return obj.object_name.split('.')[-1]
 
-def getFileNames(currentDay, client, username):
+def getImageName(currentDay, client):
     maxFiles = getNumberofObjects(client, currentDay)
     fileNumber = randint(1, maxFiles)
-    fileExtension = getObjectExtension(client, currentDay, fileNumber)
-    desiredFile = currentDay + '/' + str(fileNumber) + '.' + fileExtension
-    downloadName = username + '.' + fileExtension
-    return desiredFile, downloadName
+    fileExtension = '.' + getObjectExtension(client, currentDay, fileNumber)
+    desiredFile = currentDay + '/' + str(fileNumber) + fileExtension
+    return desiredFile
 
-def downloadImage(currentDay, username):
+def getDownloadURL(currentDay):
     client = _setClient()
-    object_name, file_name = getFileNames(currentDay, client, username)
-    client.fget_object(config.bucket_name, object_name, file_name)
+    object_name = getImageName(currentDay, client)
+    url = client.presigned_get_object(
+    config.bucket_name,
+    object_name,
+    expires=timedelta(days=1))
+    return url
 
 def downloadForAll(currentDay):
     cur, conn = DBwork.set_connection()
     max_id = DBwork.get_last_id(cur)
     for id in range(1, max_id + 1):
-        user = DBwork.get_user(id, cur)
-        downloadImage(currentDay, user)
+        chat_id = DBwork.get_chat_id(id, cur)
+        image_URL = getDownloadURL(currentDay)
     DBwork.close_connection(conn, cur)
 
