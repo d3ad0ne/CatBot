@@ -16,7 +16,10 @@ def _setClient():
 
 def getNumberofObjects(client, currentDay):
     objects = client.list_objects(config.bucket_name, prefix=str(currentDay) + '/')
-    return sum(1 for _ in objects)
+    numberOfObjects = sum(1 for _ in objects)
+    if numberOfObjects == 0:
+        return 'No objects in the folder'
+    return numberOfObjects
 
 
 def getObjectExtension(client, currentDay, fileNumber):
