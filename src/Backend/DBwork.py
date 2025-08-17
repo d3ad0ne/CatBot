@@ -43,7 +43,7 @@ def change_images_amount(chat_id, amount, connection, cursor):
     connection.commit()
 
 
-def get_images_amount(chat_id, connection, cursor):
+def get_images_amount(chat_id, cursor):
     cursor.execute('SELECT images_amount FROM Users WHERE chat_id = %s;', (chat_id,))
     images_amount = cursor.fetchall()[0][0]
     return images_amount

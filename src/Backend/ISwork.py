@@ -29,6 +29,7 @@ def getObjectExtension(client, currentDay, fileNumber):
             object_extension = obj.object_name.split('.')[-1]
     return object_extension
 
+
 def getImageName(currentDay, client):
     maxFiles = getNumberofObjects(client, currentDay)
     fileNumber = randint(1, maxFiles)

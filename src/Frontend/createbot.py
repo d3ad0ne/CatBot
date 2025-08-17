@@ -102,7 +102,7 @@ async def send_daily_images():
     max_id = DBwork.get_last_id(cursor)
     for id in range(1, max_id + 1):
         chat_id = DBwork.get_chat_id(id, cursor)
-        images_amount = DBwork.get_images_amount(chat_id, connection, cursor)
+        images_amount = DBwork.get_images_amount(chat_id, cursor)
         for _ in range(images_amount):
             image_link = URLInputFile(ISwork.getDownloadURL(current_day), filename=datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
             await bot.send_photo(chat_id = chat_id, photo = image_link)
@@ -115,3 +115,4 @@ scheduler.add_job(send_daily_images, 'cron', hour = 12, minute = 0)
 async def main():
     scheduler.start()
     await dp.start_polling(bot)
+
