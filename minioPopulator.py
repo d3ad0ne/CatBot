@@ -24,19 +24,19 @@ def upload_image(bucket_name, object_name, file_path):
         print(f'Error during MinIO operation: {e}')
 
 
-# print('Please enter your MinIO instance cloud address:')
-# IS_address = input()
-# print('Please enter MinIO access key:')
-# access_key = input()
-# print('Please enter MinIO secret key:')
-# secret_key = input()
-# print('Please enter bucket name:')
-# bucket = input()
+print('Please enter your MinIO instance cloud address:')
+IS_address = input()
+print('Please enter MinIO access key:')
+access_key = input()
+print('Please enter MinIO secret key:')
+secret_key = input()
+print('Please enter bucket name:')
+bucket = input()
 
-IS_address = config.IS_address
-access_key = config.acc_key
-secret_key = config.sec_key
-bucket = config.bucket_name
+# IS_address = config.IS_address
+# access_key = config.acc_key
+# secret_key = config.sec_key
+# bucket = config.bucket_name
 
 client = Minio(
     IS_address,
