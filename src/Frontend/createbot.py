@@ -1,13 +1,12 @@
 from loguru import logger
 import psycopg2
-import Backend.ISwork, Backend.DBwork
 from src import config
 from src.Backend import DBwork
 from src.Backend import ISwork
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.filters import Command, CommandObject
-from aiogram.types import Message, URLInputFile, BotCommand, BotCommandScopeDefault, BotCommandScopeAllPrivateChats, BotCommandScopeAllGroupChats
+from aiogram.types import Message, URLInputFile, BotCommand, BotCommandScopeAllPrivateChats, BotCommandScopeAllGroupChats
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.methods import DeleteMyCommands
@@ -19,11 +18,12 @@ current_day = datetime.now().weekday()
 
 scheduler = AsyncIOScheduler(timezone = 'Europe/Moscow')
 
+logging_level = config.logging_level
 logger.add(
     "sys.stdout",
     format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level} | {file}:{line} - {message}",
     colorize=True,
-    level="INFO"
+    level=logging_level
 )
 
 bot = Bot(token = config.TG_token , default = DefaultBotProperties(parse_mode = ParseMode.HTML))

@@ -12,6 +12,7 @@ host_name = config('HOST_NAME')
 port = config('PORT')
 bucket_name = config('BUCKET_NAME')
 
-
 TG_token = config('TG_TOKEN')
 # ADMINS = [int(admin_id) for admin_id in config('ADMINS').split(',')]
+
+logging_level = config('LOGGING_LEVEL')

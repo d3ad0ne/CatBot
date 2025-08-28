@@ -5,11 +5,12 @@ from src import config
 from loguru import logger
 
 
+logging_level = config.logging_level
 logger.add(
     "sys.stdout",
     format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level} | {file}:{line} - {message}",
     colorize=True,
-    level="INFO"
+    level=logging_level
 )
 
 
