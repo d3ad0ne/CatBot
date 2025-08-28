@@ -1,5 +1,16 @@
+import logging
+
 import psycopg2
 from src import config
+from loguru import logger
+
+
+logger.add(
+    "sys.stdout",
+    format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level} | {file}:{line} - {message}",
+    colorize=True,
+    level="INFO"
+)
 
 
 def get_last_id(cursor):
@@ -11,20 +22,27 @@ def get_last_id(cursor):
 
 
 def set_connection():
-    connection = psycopg2.connect(
-    dbname = config.db_name,
-    user = config.postgres_user,
-    password = config.postgres_password,
-    host = config.host_name,
-    port = config.port
-    )
-    cursor = connection.cursor()
-    return cursor, connection
+    try:
+        connection = psycopg2.connect(
+        dbname = config.db_name,
+        user = config.postgres_user,
+        password = config.postgres_password,
+        host = config.host_name,
+        port = config.port
+        )
+        cursor = connection.cursor()
+        logger.info('Successfully set connection to the PostgreSQL DB')
+        return cursor, connection
+    except psycopg2.Error as e:
+        logger.error(f'Failed to set connection to the PostgreSQL DB: {e.pgerror}')
 
 
 def close_connection(connection, cursor):
-    cursor.close()
-    connection.close()
+    try:
+        cursor.close()
+        connection.close()
+    except psycopg2.Error as e:
+        logger.error(f'Failed to close PostgreSQL connection: {e.pgerror}')
 
 
 #Functions don't close connection automatically, it has to be closed manually
@@ -53,3 +71,41 @@ def get_chat_id(id, cursor):
     cursor.execute("SELECT chat_id FROM Users WHERE id = %s", (id,))
     chat_id = cursor.fetchall()[0][0]
     return chat_id
+
+
+def schema_creator(schema_name):
+    cur, conn = set_connection()
+    try:
+        cur.execute(f'CREATE SCHEMA IF NOT EXISTS {schema_name};')
+        conn.commit()
+        logger.info(f'Successfully created schema {schema_name} if it didn\'t exist yet')
+    except psycopg2.Error as e:
+        logger.error(f'Error during schema creation: {e}')
+    finally:
+        close_connection(conn, cur)
+
+
+def table_creator(schema_name, table_name):
+    cur, conn = set_connection()
+    try:
+        cur.execute(f'''
+CREATE TABLE IF NOT EXISTS {schema_name}.{table_name}
+(
+    id integer NOT NULL DEFAULT nextval('users_id_seq'::regclass),
+    chat_id bigint NOT NULL,
+    images_amount bigint,
+    CONSTRAINT users_pkey PRIMARY KEY (id),
+    CONSTRAINT chat_id_unique UNIQUE (chat_id)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS {schema_name}.users
+    OWNER to {config.postgres_user};
+''')
+        conn.commit()
+        logger.info(f'Successfully created table {table_name} in schema {schema_name} if it didn\'t exist yet')
+    except psycopg2.Error as e:
+        logging.error(f'Error during table creation: {e}')
+    finally:
+        close_connection(conn, cur)
