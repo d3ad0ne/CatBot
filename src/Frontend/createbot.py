@@ -1,22 +1,28 @@
-from loguru import logger
-import psycopg2
-from src import config
-from src.Backend import DBwork
-from src.Backend import ISwork
-from aiogram import Bot, Dispatcher
-from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.filters import Command, CommandObject
-from aiogram.types import Message, URLInputFile, BotCommand, BotCommandScopeAllPrivateChats, BotCommandScopeAllGroupChats
-from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
-from aiogram.methods import DeleteMyCommands
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from datetime import datetime
 
+import psycopg2
+from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
+from aiogram.filters import Command, CommandObject
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.types import (
+    BotCommand,
+    BotCommandScopeAllGroupChats,
+    BotCommandScopeAllPrivateChats,
+    Message,
+    URLInputFile,
+)
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from loguru import logger
+
+from src import config
+from src.Backend import DBwork, ISwork
 
 current_day = datetime.now().weekday()
 
 scheduler = AsyncIOScheduler(timezone = 'Europe/Moscow')
+
 
 logging_level = config.logging_level
 logger.add(
@@ -26,8 +32,10 @@ logger.add(
     level=logging_level
 )
 
-bot = Bot(token = config.TG_token , default = DefaultBotProperties(parse_mode = ParseMode.HTML))
+
+bot = Bot(token = config.TG_token , default = DefaultBotProperties(parse_mode = ParseMode.HTML)) # type: ignore
 dp = Dispatcher(storage = MemoryStorage())
+
 
 schema_name = 'catbot'
 table_name = 'Users'
@@ -35,24 +43,35 @@ table_name = 'Users'
 
 @dp.message(Command('start'))
 async def cmd_start(message: Message):
-    await message.answer('''
-This is a bot that sends images of cats.
+    await message.answer(
+        text='''
+        This is a bot that sends images of cats.
 
-List of available commands:
-/cat - request an image of a cat from today's pool of images
-/subscribe - subscribe to daily cat images sent at 12:00 UTC+3
-/subscription_modify <number> - change the amount of images sent daily
-/unsubscribe - cancel your subscription(but why would you want to? :3)
-''', parse_mode=None)
+        List of available commands:
+        /cat - request an image of a cat from today's pool of images
+        /subscribe - subscribe to daily cat images sent at 12:00 UTC+3
+        /subscription_modify <number> - change the amount of images sent daily
+        /unsubscribe - cancel your subscription (but why would you want to? :3)
+        ''',
+        parse_mode=None
+    )
     logger.info(f'Command /start executed successfully. ChatID: {message.chat.id}')
 
 
 @dp.message(Command('cat'))
 async def cmd_cat(message: Message):
     chat_id = message.chat.id
-    image_link = URLInputFile(ISwork.getDownloadURL(current_day), filename=datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
+    download_url = ISwork.getDownloadURL(current_day)
+    if download_url is not None:
+        image_link = URLInputFile(
+            download_url,
+            filename=datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+        )
+    else:
+        image_link = None
+
     if image_link is None:
-        await bot.send_message(chat_id=chat_id, text="We are sorry, but there seems to be a problem with finding images for today.")
+        await bot.send_message(chat_id=chat_id, text='We are sorry, but there seems to be a problem with finding images for today.')
     else:
         await message.answer_photo(image_link, caption='Look, a cat :3')
         logger.info(f'Command /cat executed successfully. ChatID: {chat_id}')
@@ -61,14 +80,16 @@ async def cmd_cat(message: Message):
 @dp.message(Command('subscription_modify'))
 async def subscription_modify(message: Message, command: CommandObject):
     chat_id = message.chat.id
-    if command.args is None or command.args.isdigit() == False:
-        await message.answer('Please write the number of images you would like\n'
-                             'to receive in the same message as a command.\n'
-                             'Example:'
-                             '/subscription_modify <number of daily images>')
+    if command.args is None or not command.args.isdigit():
+        await message.answer(
+            'Please write the number of images you would like\n'
+            'to receive in the same message as a command.\n'
+            'Example:'
+            '/subscription_modify <number of daily images>'
+        )
         return
     try:
-        cursor, connection = DBwork.set_connection()
+        cursor, connection = DBwork.set_connection() # type: ignore
         amount = command.args
         DBwork.change_images_amount(chat_id, amount, connection, cursor)
         DBwork.close_connection(connection, cursor)
@@ -99,9 +120,9 @@ async def cmd_subscribe(message: Message):
             logger.error(f'PostgreSQL error occurred. ChatID: {chat_id}. Error: {str(e.pgerror)}')
         return
     await message.answer('''
-    You have successfully subscribed to daily cat photos!
-    You will get 1 photo a day by default,
-    use /subscription_modify to change that amount.
+        You have successfully subscribed to daily cat photos!
+        You will get 1 photo a day by default,
+        use /subscription_modify to change that amount.
     ''')
     logger.info(f'Command /subscribe executed successfully. ChatID: {chat_id}')
 
@@ -132,7 +153,12 @@ async def send_daily_images():
         chat_id = DBwork.get_chat_id(id, cursor)
         images_amount = DBwork.get_images_amount(chat_id, cursor)
         for _ in range(images_amount):
-            image_link = URLInputFile(ISwork.getDownloadURL(current_day), filename=datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
+            url = ISwork.getDownloadURL(current_day)
+            if url is not None:
+                image_link = URLInputFile(url, filename=datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
+            else:
+                image_link = None
+
             if image_link is None:
                 await bot.send_message(chat_id=chat_id, text="We are sorry, but there seems to be a problem with finding images for today.")
             else:
@@ -142,8 +168,6 @@ async def send_daily_images():
 
 
 async def set_commands_for_menu():
-    # await bot(DeleteMyCommands(scope=BotCommandScopeDefault()))
-    logger.info('Bot command list cleared')
     commands = [
         BotCommand(command='start', description='Get info about the bot and its commands'),
         BotCommand(command='cat', description='Request an image of a cat from today\'s pool of images'),

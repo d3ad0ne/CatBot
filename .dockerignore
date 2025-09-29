@@ -1,0 +1,16 @@
+#.dockerignore
+# Gitea
+.gitea
+
+# Docker
+.dockerignore
+dockerfile
+compose.yaml
+compose.yml
+
+# Git
+.gitignore
+*.md
+example.env
+
+minioPopulator.py

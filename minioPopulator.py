@@ -1,8 +1,8 @@
-from minio import Minio
-from minio.error import S3Error
-from src import config
 import glob
 import os
+
+from minio import Minio
+from minio.error import S3Error
 
 
 def upload_image(bucket_name, object_name, file_path):
@@ -24,6 +24,8 @@ def upload_image(bucket_name, object_name, file_path):
         print(f'Error during MinIO operation: {e}')
 
 
+# Main
+
 print('Please enter your MinIO instance cloud address:')
 IS_address = input()
 print('Please enter MinIO access key:')
@@ -33,10 +35,6 @@ secret_key = input()
 print('Please enter bucket name:')
 bucket = input()
 
-# IS_address = config.IS_address
-# access_key = config.acc_key
-# secret_key = config.sec_key
-# bucket = config.bucket_name
 
 client = Minio(
     IS_address,
@@ -82,11 +80,12 @@ for i in range(len(paths)):
         break
 
 starting_weekday = 0
+prev_obj_len = -1
 for n in range(1, 8):
-    objects = client.list_objects(config.bucket_name, prefix=str(n) + '/')
+    objects = client.list_objects(bucket, prefix=str(n) + '/')
     obj_len = sum(1 for _ in objects)
     if n == 1:
-        if obj_len < sum(1 for _ in client.list_objects(config.bucket_name, prefix='7/')):
+        if obj_len < sum(1 for _ in client.list_objects(bucket, prefix='7/')):
             starting_weekday = n - 1
     elif prev_obj_len > obj_len:
         starting_weekday = n - 1

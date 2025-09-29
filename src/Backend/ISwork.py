@@ -1,9 +1,10 @@
-from minio import Minio, S3Error
-from random import randint
 from datetime import timedelta
-from src import config
-from loguru import logger
+from random import randint
 
+from loguru import logger
+from minio import Minio, S3Error
+
+from src import config
 
 logging_level = config.logging_level
 logger.add(
@@ -17,9 +18,9 @@ logger.add(
 def _setClient():
     try:
         minio_client = Minio(
-            config.IS_address,
-            access_key = config.acc_key,
-            secret_key = config.sec_key,
+            config.IS_address, # type: ignore
+            access_key = config.acc_key, # type: ignore
+            secret_key = config.sec_key, # type: ignore
             secure = False
         )
         logger.info('Successfully set connection to the MinIO bucket')
@@ -50,20 +51,28 @@ def getImageName(currentDay, client):
     if maxFiles == 0:
         return None
     fileNumber = randint(1, maxFiles)
-    fileExtension = '.' + getObjectExtension(client, currentDay, fileNumber)
+    shortExtension = getObjectExtension(client, currentDay, fileNumber)
+    fileExtension = ''
+    if shortExtension is not None:
+        fileExtension = '.' + shortExtension
     desiredFile = str(currentDay) + '/' + str(fileNumber) + fileExtension
     return desiredFile
 
 
 def getDownloadURL(currentDay):
     client = _setClient()
+    if client is None:
+        logger.error("Failed to set MinIO client")
+        return None
+
     object_name = getImageName(currentDay, client)
     if object_name is None:
         logger.error(f"Can't generate a URL: no files in current MinIO directory({currentDay})")
         return None
+
     url = client.presigned_get_object(
-    config.bucket_name,
-    object_name,
-    expires=timedelta(days=1)
+        config.bucket_name, # type: ignore
+        object_name,
+        expires=timedelta(days=1)
     )
     return url

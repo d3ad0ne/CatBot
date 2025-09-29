@@ -1,0 +1,70 @@
+version: '3.9'
+
+services:
+  catbot:
+    image: git.frik.su/n0one/catbot:latest
+    container_name: catbot-bot
+    environment:
+      TG_TOKEN: your_telegram_token
+      IS_address: minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio
+      MINIO_ROOT_USER: minio
+      BUCKET_NAME: catbot
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      LOGGING_LEVEL: info
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:latest
+    container_name: catbot-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 30s
+      timeout: 20s
+      retries: 5
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
+
+  minio:
+    image: minio/minio:latest
+    container_name: catbot-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio
+      MINIO_BROWSER: "on"
+    volumes:
+      - ./data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+    driver: local

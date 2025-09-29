@@ -1,9 +1,9 @@
 import logging
 
 import psycopg2
-from src import config
 from loguru import logger
 
+from src import config
 
 logging_level = config.logging_level
 logger.add(
@@ -25,17 +25,18 @@ def get_last_id(cursor):
 def set_connection():
     try:
         connection = psycopg2.connect(
-        dbname = config.db_name,
-        user = config.postgres_user,
-        password = config.postgres_password,
-        host = config.host_name,
-        port = config.port
+            dbname = config.db_name,
+            user = config.postgres_user,
+            password = config.postgres_password,
+            host = config.host_name,
+            port = config.port
         )
         cursor = connection.cursor()
         logger.info('Successfully set connection to the PostgreSQL DB')
         return cursor, connection
     except psycopg2.Error as e:
         logger.error(f'Failed to set connection to the PostgreSQL DB: {e.pgerror}')
+        raise e
 
 
 def close_connection(connection, cursor):
