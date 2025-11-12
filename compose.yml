@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   catbot:
-    image: git.frik.su/n0one/catbot:latest
+    image: https://github.com/d3ad0ne/CatBot:latest
     container_name: catbot-bot
     environment:
       TG_TOKEN: your_telegram_token
