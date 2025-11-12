@@ -5,8 +5,8 @@ on:
     types: [published]
 
 env:
-  REGISTRY: git.frik.su
-  IMAGE_NAME: ${{ gitea.repository }}
+  REGISTRY: github.com
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push:
